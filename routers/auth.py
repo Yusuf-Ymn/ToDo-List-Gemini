@@ -17,13 +17,13 @@ router=APIRouter(
 )
 
 
-templates = Jinja2Templates(directory="templates")  #html dosyalarını bağlıyoruz.
+templates = Jinja2Templates(directory="templates") 
 
-#token için gerekli bazı şeyler
+
 SECRET_KEY="h4WkwIxZT7PbE6n4QkFy"
 ALGORITHM="HS256"
 
-#Şifreleme için
+
 bcrypt_context= CryptContext(schemes=["bcrypt"],deprecated="auto")
 oauth2_bearer= OAuth2PasswordBearer(tokenUrl="/auth/token")
 
@@ -56,23 +56,23 @@ class Token(BaseModel):
     token_type: str
 
 
-#Token oluşturma
+
 def create_access_token(username: str, user_id: int, role: str, expires_delta: timedelta):
     payload = {'sub': username, 'id': user_id, 'role': role}
-    expires = datetime.now(timezone.utc) + expires_delta #tokenın bitiş süresi
+    expires = datetime.now(timezone.utc) + expires_delta
     payload.update({'exp': expires})
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 
 def authenticate_user(username: str,password: str, db: db_dependency):
-    user = db.query(User).filter(User.username==username).first()  #Burada first kullanmadığım için hata aldım ona dikkat et eğer first all vs kullanmazsan none gibi bir değer döndürüyor, nesne döndürmüyor
+    user = db.query(User).filter(User.username==username).first()
     if not user:
         return False
     if not bcrypt_context.verify(password,user.hashed_password):
         return False
     return user
 
-#tokena sahip kullanıcının bilgilerini getirme
+
 async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -90,13 +90,13 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
 @router.get("/login-page")
 def render_login_page(request: Request):
     return templates.TemplateResponse("login.html",{"request": request})
-                                                        #HTML ile bağlıyoruz.
+                                                       
 @router.get("/register-page")
 def render_register_page(request: Request):
     return templates.TemplateResponse("register.html",{"request": request})
 
 
-#Kullanıcı oluşturma
+
 @router.post("/",status_code= status.HTTP_201_CREATED)
 async def create_user(db: db_dependency, create_user_request: CreateUserRequest):
     user = User(
